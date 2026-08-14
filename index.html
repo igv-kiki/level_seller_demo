@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seller Level · 展示方案 Demo</title>
+<style>
+:root{
+  --ink:#1D2129; --ink2:#606A78; --ink3:#8A939F; --ink4:#B7BDC6;
+  --line:#E5E8EC; --line2:#EFF1F4;
+  --page:#F0F2F5; --card:#FFF; --sunk:#F7F8FA;
+  --blue:#3457D5; --blue-soft:#EBEFFC; --blue-ink:#22399B;
+  --warn:#F5A623; --warn-soft:#FEF4E6;
+  --good:#0E7A5E; --danger:#D0342C;
+  --note:#8A4FBF; --note-soft:#F4ECFB;
+  --t-starter:#6B7480; --t-starter-bg:#EDEFF2;
+  --t-growing:#2A63A8; --t-growing-bg:#E6EFF9;
+  --t-premium:#0E7A5E; --t-premium-bg:#E2F2EC;
+  --t-top:#96620F; --t-top-bg:#FAF0DA;
+  --t-elite:#6B4FA8; --t-elite-bg:#F0EAFA;
+  --fs:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--fs);background:var(--page);color:var(--ink);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+.num{font-variant-numeric:tabular-nums}
+.ono{font-family:var(--mono);font-size:11.5px;letter-spacing:-.01em}
+
+/* ---------- demo shell ---------- */
+.shell{display:flex;min-height:100vh}
+.rail{width:238px;flex:none;background:#1D2129;color:#fff;padding:22px 0 40px;position:sticky;top:0;height:100vh;overflow:auto}
+.rail-hd{padding:0 20px 18px}
+.rail-eyebrow{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:#79828E}
+.rail-ttl{font-size:15.5px;font-weight:600;margin-top:6px}
+.rail-sub{font-size:12px;color:#89929D;margin-top:4px}
+.rail-grp{font-size:10.5px;letter-spacing:.13em;color:#6B7480;padding:16px 20px 6px;text-transform:uppercase}
+.rail-btn{display:block;width:100%;text-align:left;background:none;border:0;color:#C4CAD2;padding:9px 20px;font-size:13.5px;border-left:2px solid transparent}
+.rail-btn:hover{background:#282D33;color:#fff}
+.rail-btn[aria-selected="true"]{background:#282D33;color:#fff;border-left-color:var(--blue);font-weight:500}
+.rail-btn .idx{color:#6B7480;font-size:11px;margin-right:8px;font-variant-numeric:tabular-nums}
+.rail-btn[aria-selected="true"] .idx{color:#7C93E8}
+.rail-tools{border-top:1px solid #2E343B;margin-top:18px;padding:15px 20px 0}
+.tool-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tool-lbl{font-size:12.5px;color:#C4CAD2}
+.tool-hint{font-size:11px;color:#6B7480;line-height:1.5;margin-top:5px}
+.sw{width:36px;height:20px;border-radius:20px;background:#3C434B;border:0;position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw[aria-checked="true"]{background:var(--blue)}
+.sw[aria-checked="true"]::after{transform:translateX(16px)}
+.seg{display:flex;background:#2E343B;border-radius:6px;padding:2px;margin-top:7px}
+.seg button{flex:1;background:none;border:0;color:#99A1AA;font-size:11.5px;padding:5px 2px;border-radius:4px}
+.seg button[aria-selected="true"]{background:#474F58;color:#fff}
+.lockmsg{font-size:11px;color:#6B7480;margin-top:7px;line-height:1.5}
+
+.stage{flex:1;min-width:0;padding:26px 30px 80px}
+.stage-hd{max-width:1180px;margin:0 auto 16px}
+.stage-kicker{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3)}
+.stage-ttl{font-size:21px;font-weight:600;margin:6px 0 0;letter-spacing:-.01em}
+.stage-desc{color:var(--ink2);margin:8px 0 0;max-width:70ch;font-size:13.5px}
+.frame{max-width:1180px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.chrome{display:flex;align-items:center;gap:7px;padding:8px 13px;background:#E9ECF0;border-bottom:1px solid var(--line)}
+.dot{width:9px;height:9px;border-radius:50%;background:#CBD1D8}
+.urlbar{flex:1;margin-left:8px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:3px 10px;font-size:11.5px;color:var(--ink3)}
+.scene{display:none}
+.scene.on{display:block}
+
+/* ---------- iGV console ---------- */
+.igv-top{display:flex;align-items:center;justify-content:space-between;padding:10px 22px;background:#fff;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-mk{width:26px;height:26px;border-radius:6px;background:#F0653A;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.logo-tx{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.logo-tx small{display:block;font-size:8px;letter-spacing:.16em;color:var(--ink3);font-weight:600;margin-top:-2px}
+.top-r{display:flex;align-items:center;gap:14px;position:relative}
+.acct{display:flex;align-items:center;gap:8px;padding:3px 8px 3px 3px;border-radius:20px;border:1px solid transparent}
+.acct:hover{background:var(--sunk);border-color:var(--line)}
+.av{width:28px;height:28px;border-radius:7px;background:#8FC0F5;display:grid;place-items:center;font-size:12px;color:#1D3E6B;font-weight:700;flex:none}
+.bell{position:relative;color:var(--ink2)}
+.bell svg{width:18px;height:18px}
+.bell b{position:absolute;top:-5px;right:-8px;background:#E5484D;color:#fff;font-size:9.5px;border-radius:9px;padding:0 4px;font-weight:600}
+
+.igv-body{display:flex;background:var(--page);min-height:600px}
+.igv-side{width:238px;flex:none;padding:16px 14px}
+.side-card{background:#fff;border-radius:10px;padding:8px 0}
+.si{display:flex;align-items:center;gap:11px;padding:10px 16px;font-size:13.5px;color:var(--ink)}
+.si .gi{width:17px;height:17px;color:var(--ink2);flex:none}
+.si.act{color:var(--blue);font-weight:500}
+.si.act .gi{color:var(--blue)}
+.si .chev{margin-left:auto;width:12px;height:12px;color:var(--ink4)}
+.igv-main{flex:1;min-width:0;padding:16px 22px 30px}
+.crumb{font-size:13px;color:var(--ink3);margin-bottom:14px}
+.crumb b{color:var(--ink);font-weight:500}
+
+.banner{display:flex;align-items:center;gap:10px;background:#EAF2FE;border-radius:8px;padding:11px 14px;font-size:13px;color:#20458C;margin-bottom:14px}
+.cols2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:14px;align-items:start}
+.wcard{background:#fff;border-radius:10px;padding:18px 20px}
+.wcard + .wcard{margin-top:14px}
+.wtitle{font-size:15px;font-weight:600;margin-bottom:2px}
+.hr{height:1px;background:var(--line2);margin:14px 0}
+.statrow{display:flex}
+.stat{flex:1;text-align:center;border-right:1px solid var(--line2);padding:2px 4px}
+.stat:last-child{border-right:0}
+.stat .v{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat .v.hot{color:#E5484D}
+.stat .k{font-size:12px;color:var(--ink2);margin-top:2px}
+.tabs{display:flex;gap:9px;margin:14px 0 18px}
+.tab{border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 15px;font-size:13px;color:var(--ink2)}
+.tab.act{background:var(--blue);border-color:var(--blue);color:#fff}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.grid3 .k{font-size:13px;color:var(--ink2);font-weight:500}
+.grid3 .v{font-size:20px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
+
+/* profile card (右侧) */
+.pcard{background:#fff;border-radius:10px;padding:20px;text-align:center}
+.pcard .bigav{width:62px;height:62px;border-radius:50%;background:#8FC0F5;display:grid;place-items:center;margin:0 auto;font-size:22px;color:#1D3E6B;font-weight:700}
+.pcard .nm{font-size:15.5px;font-weight:600;margin-top:10px}
+.tagrow{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:9px}
+.tag{background:var(--warn-soft);color:#9A6410;font-size:11.5px;border-radius:4px;padding:2px 8px}
+.tag.ok{background:#E4F3EC;color:#0E6A50}
+
+.lvblock{margin-top:16px;padding-top:15px;border-top:1px solid var(--line2);text-align:left}
+.lvhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.qm{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--ink4);color:var(--ink3);font-size:10px;text-decoration:none;margin-left:5px;vertical-align:1px;line-height:1}
+.qm:hover{border-color:var(--blue);color:var(--blue)}
+.lvbadge{display:inline-flex;align-items:center;gap:5px;border-radius:5px;padding:3px 8px;font-size:12px;font-weight:600}
+.lvbadge .lv{font-variant-numeric:tabular-nums}
+.t-starter{background:var(--t-starter-bg);color:var(--t-starter)}
+.t-growing{background:var(--t-growing-bg);color:var(--t-growing)}
+.t-premium{background:var(--t-premium-bg);color:var(--t-premium)}
+.t-top{background:var(--t-top-bg);color:var(--t-top)}
+.t-elite{background:var(--t-elite-bg);color:var(--t-elite)}
+.lvscore{font-size:12.5px;color:var(--ink2);margin-top:9px}
+.lvscore b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.lvneed{font-size:12.5px;color:var(--ink2);margin-top:10px}
+.lvneed b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:#EBEEF2;margin-top:7px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--blue);border-radius:3px}
+.barfoot{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--ink3);margin-top:6px}
+.lnk{color:var(--blue);text-decoration:none;font-size:12.5px}
+.lnk:hover{text-decoration:underline}
+
+.notif{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line2);font-size:12.5px}
+.notif:last-child{border-bottom:0}
+.notif .d{color:var(--ink3);flex:none;font-variant-numeric:tabular-nums}
+
+/* personal center */
+.pc-wrap{display:flex;background:#fff;border-radius:10px;overflow:hidden;min-height:480px}
+.pc-nav{width:250px;flex:none;border-right:1px solid var(--line2);padding:12px 0}
+.pc-i{display:flex;align-items:center;gap:10px;padding:13px 22px;font-size:14px;color:var(--ink)}
+.pc-i.act{background:var(--blue-soft);color:var(--blue);font-weight:500;box-shadow:inset 3px 0 0 var(--blue)}
+.pc-i .gi{width:16px;height:16px}
+.pc-main{flex:1;min-width:0;padding:22px 26px}
+.pc-h{font-size:19px;font-weight:600}
+.pc-sub{color:var(--ink3);font-size:13px;margin:3px 0 16px}
+.frow{display:flex;align-items:center;gap:16px;padding:15px 0;border-top:1px solid var(--line2)}
+.frow-k{width:190px;flex:none;font-size:13.5px;color:var(--ink2)}
+.frow-v{flex:1;min-width:0;font-size:13.5px}
+.btn-o{border:1px solid #C9D3F5;background:#F5F7FE;color:var(--blue);border-radius:5px;padding:5px 16px;font-size:12.5px;flex:none}
+
+/* level center */
+.lc-hero{display:flex;align-items:center;gap:16px}
+.crest{width:56px;height:56px;flex:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.crest .t{font-size:10px}
+.crest .n{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.lc-nm{font-size:16px;font-weight:600}
+.lc-sc{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.goal{margin-top:16px;display:flex;align-items:baseline;gap:7px}
+.goal-l{font-size:12.5px;color:var(--ink2)}
+.goal-v{font-size:24px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.goal-u{font-size:13px;color:var(--ink2)}
+
+.bgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.bcell{border:1px solid var(--line);border-radius:9px;padding:13px 14px}
+.bcell.lock{background:var(--sunk)}
+.bcell.soon{border-style:dashed;background:transparent}
+.bcell .bi{width:18px;height:18px;color:var(--blue)}
+.bcell.lock .bi,.bcell.soon .bi{color:var(--ink4)}
+.bcell .bn{font-size:13.5px;font-weight:600;margin-top:6px}
+.bcell.lock .bn,.bcell.soon .bn{color:var(--ink2);font-weight:500}
+.bcell .bs{font-size:11.5px;margin-top:3px;font-weight:500}
+.bs.on{color:var(--good)} .bs.off{color:var(--ink3)}
+.bcell .bd{font-size:11.5px;color:var(--ink3);margin-top:5px;line-height:1.55}
+.scope{display:inline-block;background:var(--blue-soft);color:var(--blue-ink);font-size:10.5px;border-radius:3px;padding:1px 6px;margin-left:5px;font-weight:600;vertical-align:1px}
+
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:4px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:14px;padding:4px 12px;font-size:12px;color:var(--ink2)}
+.chip[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.led{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line2)}
+.led-m{flex:1;min-width:0}
+.led-a{font-size:13.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ltag{font-size:10.5px;border-radius:3px;padding:1px 6px;font-weight:600;flex:none}
+.lt-complete{background:#E9F3EC;color:#1E6B3C}
+.lt-review{background:#EBEFFC;color:#22399B}
+.lt-dispute{background:#FCECEA;color:#A32A22}
+.lt-restore{background:#EDF6FB;color:#155E7A}
+.lt-adjust{background:#F2EFF7;color:#5C4489}
+.led-b{color:var(--ink3);margin-top:4px}
+.led-v{font-size:14px;font-weight:600;flex:none;font-variant-numeric:tabular-nums}
+.plus{color:var(--good)} .minus{color:var(--danger)}
+.empty{text-align:center;padding:34px 20px;color:var(--ink3);font-size:13px;border-top:1px solid var(--line2)}
+.srch{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;padding:5px 10px;background:#fff;min-width:240px}
+.srch:focus-within{border-color:var(--blue)}
+.srch svg{width:14px;height:14px;color:var(--ink4);flex:none}
+.srch input{border:0;outline:0;flex:1;min-width:0;font-family:var(--mono);font-size:12px;color:var(--ink);background:transparent}
+.srch input::placeholder{font-family:var(--fs);font-size:12.5px;color:var(--ink4)}
+.srch button{border:0;background:none;color:var(--ink4);font-size:12px;padding:0 2px;line-height:1}
+.pager{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:16px;margin-top:4px;border-top:1px solid var(--line2);font-size:12.5px;color:var(--ink2)}
+.pg-total{margin-right:4px}
+.pg-sel{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:5px;padding:4px 9px;color:var(--ink2)}
+.pg-sel svg{width:11px;height:11px;color:var(--ink4)}
+.pg-b{min-width:28px;height:28px;border:0;background:none;border-radius:5px;color:var(--ink2);font-size:12.5px;padding:0 6px}
+.pg-b:hover:not([disabled]){color:var(--blue)}
+.pg-b.on{color:var(--blue);font-weight:600}
+.pg-b[disabled]{color:var(--ink4);cursor:default}
+.pg-el{color:var(--ink4);letter-spacing:1px}
+.pg-goto{display:inline-flex;align-items:center;gap:7px;margin-left:4px}
+.pg-in{width:44px;height:28px;border:1px solid var(--line);border-radius:5px;text-align:center;font-size:12.5px;color:var(--ink);outline:0}
+.pg-in:focus{border-color:var(--blue)}
+.foot-note{font-size:11.5px;color:var(--ink3);margin:12px 0 0;line-height:1.6}
+
+/* menu */
+.menu{position:absolute;top:40px;right:0;width:262px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(20,25,30,.15);padding:6px;z-index:6}
+.menu-hd{padding:11px 11px 13px;border-bottom:1px solid var(--line2);margin-bottom:5px}
+.menu-nm{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.menu-id{font-size:11px;color:var(--ink3);margin-top:4px;font-variant-numeric:tabular-nums}
+.menu-lv{margin-top:11px;background:var(--sunk);border-radius:7px;padding:10px}
+.menu-lv-t{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink2)}
+.menu-lv-t b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.menu-i{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:6px;font-size:13px}
+.menu-i:hover{background:var(--sunk)}
+.menu-i .gi{width:15px;height:15px;color:var(--ink2)}
+.menu-sep{height:1px;background:var(--line2);margin:5px 0}
+
+/* article */
+.artwrap{padding:32px 40px 46px;max-width:780px;margin:0 auto}
+.art-eyebrow{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);font-weight:700}
+.art-h1{font-size:25px;font-weight:700;letter-spacing:-.02em;margin:9px 0 8px;line-height:1.35}
+.art-lead{font-size:14.5px;color:var(--ink2);line-height:1.75;margin:0 0 6px}
+.art-meta{font-size:12px;color:var(--ink4);padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.art-h2{font-size:16px;font-weight:600;margin:28px 0 10px}
+.art-h2 .no{color:var(--ink4);font-weight:500;margin-right:8px;font-variant-numeric:tabular-nums}
+.artwrap p{margin:0 0 12px;line-height:1.8;color:#2E343C}
+table.at{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:13px}
+table.at th{text-align:left;background:var(--sunk);color:var(--ink2);font-weight:600;font-size:12.5px;padding:9px 12px;border:1px solid var(--line)}
+table.at td{padding:9px 12px;border:1px solid var(--line);vertical-align:top}
+table.at td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.callout{background:var(--sunk);border-left:3px solid var(--blue);padding:13px 16px;margin:15px 0;border-radius:0 6px 6px 0}
+.callout p:last-child{margin-bottom:0}
+.faq{border-top:1px solid var(--line2);padding:13px 0}
+.faq-q{font-weight:600;font-size:13.5px;margin-bottom:5px}
+.faq-a{color:#2E343C;font-size:13.5px;line-height:1.8}
+
+
+.specwrap{max-width:1180px;margin:0 auto}
+.sph{font-size:14px;font-weight:600;margin:0 0 10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sph:not(:first-child){margin-top:22px}
+.sph span{font-size:12px;color:var(--ink3);font-weight:400}
+
+table.sp{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;font-size:13px}
+table.sp th{text-align:left;background:#1D2129;color:#fff;font-weight:500;font-size:12px;padding:11px 14px;letter-spacing:.03em}
+table.sp td{padding:12px 14px;border-bottom:1px solid var(--line2);vertical-align:top}
+table.sp tr:last-child td{border-bottom:0}
+.sp-t{background:var(--sunk);border-right:1px solid var(--line2)}
+.sp-en{color:var(--ink3);font-size:12px;margin-top:2px}
+.sp-c{display:inline-block;font-family:var(--mono);font-size:10.5px;color:var(--ink2);background:var(--sunk);border:1px solid var(--line);border-radius:3px;padding:1px 5px;margin-top:6px}
+.sp-t .sp-c{background:#fff}
+.sp-v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sp-d{color:var(--ink2);line-height:1.65}
+.spnote{background:#fff;border-radius:10px;padding:18px 20px;margin-top:14px}
+.spnote b{font-size:13.5px}
+.spnote p{margin:9px 0 0;font-size:13px;color:var(--ink2);line-height:1.75}
+.spnote code{font-family:var(--mono);font-size:11.5px;background:var(--sunk);border:1px solid var(--line);border-radius:3px;padding:0 4px}
+
+
+[data-jump]{cursor:pointer}
+a.lnk[data-jump]:hover,.qm[data-jump]:hover{text-decoration:underline}
+.menu-i[data-jump],.si[data-jump]{cursor:pointer}
+.si[data-jump]:hover{color:var(--blue)}
+.si[data-jump]:hover .gi{color:var(--blue)}
+.scene.landed .frame,.scene.landed .specwrap{animation:land .5s ease}
+@keyframes land{from{box-shadow:0 0 0 3px rgba(52,87,213,.28)}to{box-shadow:0 0 0 3px rgba(52,87,213,0)}}
+@media (prefers-reduced-motion:reduce){.scene.landed .frame,.scene.landed .specwrap{animation:none}}
+
+
+.stags{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.stag{display:inline-flex;align-items:center;gap:5px;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:2px 7px;font-size:11.5px;color:var(--ink2)}
+.stag b{font-variant-numeric:tabular-nums;font-weight:600}
+.stag b.plus{color:var(--good)} .stag b.minus{color:var(--danger)} .stag b.zero{color:var(--ink3)}
+.led-v.zero{color:var(--ink3)}
+.lt-scored{background:#E9F3EC;color:#1E6B3C}
+.lt-aftersales{background:#FEF3E2;color:#8A5A0B}
+.lt-refunded{background:#FCECEA;color:#A32A22}
+.lt-adjusted{background:#F2EFF7;color:#5C4489}
+.rfnote{font-size:11.5px;color:var(--ink3);font-weight:400;margin-left:8px}
+.led-a .ono{font-size:12.5px;color:var(--ink);font-weight:500}
+
+
+/* ---------- H5 ---------- */
+.phwrap{display:flex;justify-content:center;padding:22px 0 30px}
+.phone{width:390px;flex:none;background:var(--page);border:10px solid #16191D;border-radius:40px;overflow:hidden;
+  box-shadow:0 18px 44px rgba(20,25,30,.22);display:flex;flex-direction:column;height:748px}
+.ph-status{display:flex;align-items:center;justify-content:space-between;padding:9px 22px 5px;background:#fff;font-size:12px;font-weight:600}
+.ph-ico{display:inline-flex;align-items:center;gap:3px}
+.ph-ico i{width:4px;height:9px;background:var(--ink);border-radius:1px;display:inline-block}
+.ph-ico i.bat{width:16px;height:9px;border:1px solid var(--ink);background:none;border-radius:2px}
+.ph-top{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 12px;background:#fff}
+.ph-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 14px 12px;background:#fff;border-bottom:1px solid var(--line2)}
+.ph-ttl{font-size:16px;font-weight:600}
+.ph-back{width:30px;font-size:24px;color:var(--ink2);line-height:1;cursor:pointer;text-align:left}
+.ph-blank{visibility:hidden}
+.ph-rule{font-size:12.5px;color:var(--blue);white-space:nowrap;cursor:pointer}
+.ph-body{flex:1;min-height:0;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+.ph-card{background:#fff;border-radius:12px;padding:14px 15px;margin-bottom:12px}
+.ph-card.ph-flush{padding:0 15px}
+.ph-h{font-size:14.5px;font-weight:600;margin-bottom:10px;overflow:hidden}
+.ph-hero{display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 15px;margin-bottom:12px}
+.ph-hero2{background:#fff;border-radius:12px;padding:16px 15px;margin-bottom:12px}
+.ph-lv{background:#fff;border-radius:12px;padding:13px 15px;margin-bottom:12px;cursor:pointer}
+.ph-lv-r{display:flex;align-items:center;gap:8px}
+.ph-lv-n{font-size:13px;color:var(--ink2);margin-top:9px}
+.ph-lv-n b{color:var(--ink);font-weight:600}
+.ph-arw{margin-left:auto;color:var(--ink4);font-size:17px;line-height:1;flex:none}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;text-align:center}
+.ph-grid .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.ph-grid .v.hot{color:#E5484D}
+.ph-grid .k{font-size:11.5px;color:var(--ink2);margin-top:2px;line-height:1.4}
+.ph-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+.ph-row:last-child{border-bottom:0}
+.ph-k{color:var(--ink2);flex:none}
+.ph-v{flex:1;min-width:0;text-align:right;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph-b{display:flex;gap:11px;padding:11px 0;border-top:1px solid var(--line2)}
+.ph-b.lock,.ph-b.soon{opacity:.72}
+.ph-b .bi{width:18px;height:18px;color:var(--blue);flex:none;margin-top:2px}
+.ph-b.lock .bi,.ph-b.soon .bi{color:var(--ink4)}
+.ph-b .bn{font-size:13.5px;font-weight:600}
+.ph-b .bs{font-size:11.5px;margin-top:2px;font-weight:500}
+.ph-b .bd{font-size:11.5px;color:var(--ink3);margin-top:4px;line-height:1.55}
+.ph-mine{background:#1D2129;padding:16px 16px 18px}
+.ph-mine-lv{background:rgba(255,255,255,.09);border-radius:10px;padding:11px 12px;margin-top:14px;color:#D4D9DF;cursor:pointer}
+.ph-mine-lv b{color:#fff}
+.ph-mine-lv .dim{color:#8B939C}
+.ph-mine-lv .bar{background:rgba(255,255,255,.16)}
+.ph-tab{display:flex;background:#fff;border-top:1px solid var(--line);padding:7px 0 10px}
+.ph-tb{flex:1;text-align:center;color:var(--ink3);font-size:10.5px;cursor:pointer}
+.ph-tb.on{color:var(--blue)}
+.tbi{width:20px;height:20px;display:block;margin:0 auto 3px}
+.chips.scrollx{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.chips.scrollx::-webkit-scrollbar{display:none}
+.chips.scrollx .chip{flex:none}
+.ph-art{padding:4px 2px 20px}
+.ph-art .art-h1{font-size:21px}
+.ph-art table.at{font-size:12px}
+.ph-art table.at th,.ph-art table.at td{padding:7px 8px}
+body.ish5 .stage-hd{max-width:640px}
+body.ish5 .notelist{max-width:640px}
+
+/* annotations */
+.anno{position:relative}
+body.noteoff .pin{display:none}
+.pin{position:absolute;z-index:5;width:19px;height:19px;border-radius:50%;background:var(--note);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 5px rgba(60,20,110,.35);font-variant-numeric:tabular-nums;top:-9px;left:-9px}
+body.noteon .anno[data-note]{outline:1.5px dashed rgba(138,79,191,.5);outline-offset:3px;border-radius:5px}
+.notelist{max-width:1180px;margin:15px auto 0;background:var(--note-soft);border:1px solid #E4D6F2;border-radius:10px;padding:15px 18px}
+.notelist h4{margin:0 0 10px;font-size:12px;color:var(--note);letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.notelist ol{margin:0;padding:0;list-style:none;counter-reset:n}
+.notelist li{position:relative;padding-left:27px;margin-bottom:8px;font-size:13px;line-height:1.7;color:#3B2D4B;counter-increment:n}
+.notelist li::before{content:counter(n);position:absolute;left:0;top:2px;width:18px;height:18px;border-radius:50%;background:var(--note);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center}
+body.noteoff .notelist{display:none}
+
+@media (max-width:1080px){
+  .shell{flex-direction:column} .rail{position:static;width:100%;height:auto}
+  .stage{padding:18px 14px 60px} .cols2{grid-template-columns:1fr}
+  .igv-side,.pc-nav{display:none} .artwrap{padding:22px 18px 34px}
+  .frow{flex-wrap:wrap} .frow-k{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body class="noteoff">
+<div class="shell">
+  <nav class="rail">
+    <div class="rail-hd">
+      <div class="rail-eyebrow">Design demo</div>
+      <div class="rail-ttl">Seller Level · 展示方案</div>
+      <div class="rail-sub">基于 iGV 现有布局，不改版</div>
+    </div>
+    <div class="rail-grp">展示位置</div>
+    <button class="rail-btn" data-scene="home" aria-selected="true"><span class="idx">01</span>Seller Center 首页</button>
+    <button class="rail-btn" data-scene="profile" aria-selected="false"><span class="idx">02</span>Personal Center</button>
+    <button class="rail-btn" data-scene="center" aria-selected="false"><span class="idx">03</span>Level Center</button>
+    <button class="rail-btn" data-scene="menu" aria-selected="false"><span class="idx">04</span>顶栏 / 账号菜单</button>
+    <div class="rail-grp">规则说明</div>
+    <button class="rail-btn" data-scene="article" aria-selected="false"><span class="idx">05</span>Help Center 文章</button>
+    <div class="rail-grp">交付物</div>
+    <button class="rail-btn" data-scene="spec" aria-selected="false"><span class="idx">06</span>类型与标题对照表</button>
+
+    <div class="rail-tools">
+      <div class="tool-row"><span class="tool-lbl">设计标注</span>
+        <button class="sw" id="noteSw" role="switch" aria-checked="false" aria-label="设计标注"></button></div>
+      <div class="tool-hint">显示每个元素的设计意图</div>
+
+      <div class="tool-row" style="margin-top:16px"><span class="tool-lbl">终端</span></div>
+      <div class="seg" id="view">
+        <button data-v="desktop" aria-selected="true">Web 后台</button>
+        <button data-v="h5" aria-selected="false">H5</button>
+      </div>
+
+      <div class="tool-row" style="margin-top:16px"><span class="tool-lbl">模拟卖家</span></div>
+      <div class="seg" id="persona">
+        <button data-p="fresh" aria-selected="false">新入驻 Lv.1</button>
+        <button data-p="premium" aria-selected="true">优质 Lv.57</button>
+      </div>
+
+      <div class="tool-row" style="margin-top:16px"><span class="tool-lbl">界面语言</span></div>
+      <div class="seg" id="lang">
+        <button data-l="zh" aria-selected="false">中文</button>
+        <button data-l="en" aria-selected="true">English</button>
+      </div>
+      <div class="lockmsg">语言实际由 Personal Center → Language 控制，此处仅为演示</div>
+    </div>
+  </nav>
+
+  <main class="stage">
+    <section class="scene on" id="sc-home"><div class="stage-hd">
+      <div class="stage-kicker">位置 01</div><h1 class="stage-ttl" id="t-home"></h1><p class="stage-desc" id="d-home"></p></div>
+      <div class="frame" id="v-home"></div>
+      <div class="notelist"><h4>设计标注</h4><ol id="notes-home"></ol></div>
+    </section>
+
+    <section class="scene" id="sc-profile"><div class="stage-hd">
+      <div class="stage-kicker">位置 02</div><h1 class="stage-ttl" id="t-profile"></h1><p class="stage-desc" id="d-profile"></p></div>
+      <div class="frame" id="v-profile"></div>
+      <div class="notelist"><h4>设计标注</h4><ol id="notes-profile"></ol></div>
+    </section>
+
+    <section class="scene" id="sc-center"><div class="stage-hd">
+      <div class="stage-kicker">位置 03</div><h1 class="stage-ttl" id="t-center"></h1><p class="stage-desc" id="d-center"></p></div>
+      <div class="frame" id="v-center"></div>
+      <div class="notelist"><h4>设计标注</h4><ol id="notes-center"></ol></div>
+    </section>
+
+    <section class="scene" id="sc-menu"><div class="stage-hd">
+      <div class="stage-kicker">位置 04</div><h1 class="stage-ttl" id="t-menu"></h1><p class="stage-desc" id="d-menu"></p></div>
+      <div class="frame" id="v-menu"></div>
+      <div class="notelist"><h4>设计标注</h4><ol id="notes-menu"></ol></div>
+    </section>
+
+    <section class="scene" id="sc-spec"><div class="stage-hd">
+      <div class="stage-kicker">交付物</div><h1 class="stage-ttl" id="t-spec"></h1><p class="stage-desc" id="d-spec"></p></div>
+      <div id="v-spec"></div>
+    </section>
+
+    <section class="scene" id="sc-article"><div class="stage-hd">
+      <div class="stage-kicker">位置 05</div><h1 class="stage-ttl" id="t-article"></h1><p class="stage-desc" id="d-article"></p></div>
+      <div class="frame" id="v-article"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ================= i18n ================= */
+const T = {
+zh:{
+ nav:["Seller Center","Order Center","Product Center","User Review","Financial Center","Message Center","Level Center","Account","Open Platform","API Docs","Help Center"],
+ crumbHome:["首页","Seller Center"], crumbPc:["首页","Account","Personal Center"], crumbLc:["首页","Level Center"],
+ pending:"待处理事项", p1:"待发货订单",p2:"超时未发货",p3:"售后记录",p4:"缺货商品",p5:"处罚记录",
+ sales:"销售数据", updated:"数据更新时间", tabs:["昨日","近 7 天","近 30 天"],
+ s1:"未付款订单",s2:"已付款订单",s3:"已完成订单",s4:"退款",s5:"好评率",
+ notif:"规则通知",
+ idOk:"已实名认证", depOk:"保证金已缴纳", idNo:"未实名认证", depNo:"保证金未缴纳",
+ sellerLevel:"卖家等级", creditScore:"累计信用分", needTo:"升 %s 还需", pts:"分", levelCenter:"等级中心",
+ estimate:"预计约 %n 单（按 %r 分/单估算）",
+ benefits:"等级权益", ledger:"信用分明细", allRec:"全部记录", more:"展开更早记录", less:"收起",
+ emptyLedger:"完成第一笔订单后，这里会显示每笔订单的信用分变化",
+ items:{receive:"确认收货",ontime:"准时递送",good:"买家好评",bad:"买家差评",
+        aftersale:"售后/纠纷发起",refund:"退款"},
+ refreshNote:"每日刷新，每笔订单仅保留最新计分结果", updatedAt:"更新于",
+ loadMore:"加载更多", h5Tabs:["首页","订单","商品","我的"], mine:"我的", back:"返回",
+ searchPh:"搜索订单号", noResult:"没有匹配的记录",
+ aRules:"等级规则", aHowScored:"信用分怎么算？", aWhyChanged:"分数为什么会变？",
+ aWhatIs:"什么是卖家等级？", aBenefitRule:"权益规则", aTip:"信用分与等级说明",
+ total:"共 %n 条", perPage:"10 条/页", goTo:"前往", pageU:"页",
+ benefitNote:"权益按买家下单时刻的等级判定，已生效的订单不受后续等级变化影响。",
+ bTraffic:"流量扶持", bTrafficS:"全等级生效", bTrafficD:"等级越高，商品在搜索与推荐中的曝光机会越多。无等级门槛。",
+ bWarranty:"付费延长质保标签", bWarrantyOn:"已解锁 · Lv.20", bWarrantyOff:"Lv.20 解锁",
+ bWarrantyD:"可为商品开通 90 天 / 180 天延长质保标签，提升转化。",
+ bSoon:"更多权益", bSoonS:"陆续开放", bSoonD:"佣金费率激励、提现手续费优惠等权益正在规划中。",
+ accOnly:"仅 ACC 品类",
+ pcTabs:["Account","Security","Authentication","Associate with social media"],
+ pcH:"Account", pcSub:"修改你的基础账户信息",
+ fStore:"店铺名称",fUid:"User ID",fEmail:"邮箱",fLevel:"卖家等级",fLang:"语言",fTime:"在线时间",fContact:"在线联系方式",fMaint:"店铺维护",
+ update:"修改", view:"查看",
+ mMenu:["等级中心","个人中心","资金中心","消息中心"], mLogout:"退出登录",
+ orderCol:"订单号",
+ tiers:{starter:"新手",growing:"成长",premium:"优质",top:"头部",elite:"荣誉"},
+ sellerName:"beauty-fu"
+},
+en:{
+ nav:["Seller Center","Order Center","Product Center","User Review","Financial Center","Message Center","Level Center","Account","Open Platform","API Docs","Help Center"],
+ crumbHome:["Home","Seller Center"], crumbPc:["Home","Account","Personal Center"], crumbLc:["Home","Level Center"],
+ pending:"Pending items", p1:"Orders to be shipped",p2:"Overdue Delivery",p3:"After-Sales Record",p4:"Out of Stock",p5:"Penalty List",
+ sales:"Sales data", updated:"Data Update Time", tabs:["Yesterday","Last 7 days","Last 30 days"],
+ s1:"Unpaid orders",s2:"Number of paid orders",s3:"Number of completed orders",s4:"Refunds",s5:"Positive rating",
+ notif:"Rule notifications",
+ idOk:"ID Verified", depOk:"Deposit Paid", idNo:"ID Unverified", depNo:"Deposit Not Paid",
+ sellerLevel:"Seller Level", creditScore:"Credit Score", needTo:"To reach %s", pts:"pts", levelCenter:"Level Center",
+ estimate:"About %n more orders (at %r pts/order)",
+ benefits:"Level benefits", ledger:"Credit Score history", allRec:"View all", more:"Show earlier records", less:"Show less",
+ emptyLedger:"Once your first order is completed, every credit score change will appear here",
+ items:{receive:"Order received",ontime:"On-time delivery",good:"Positive review",bad:"Negative review",
+        aftersale:"After-sales / dispute opened",refund:"Refunded"},
+ refreshNote:"Refreshed daily — each order keeps only its latest result", updatedAt:"Updated",
+ loadMore:"Load more", h5Tabs:["Home","Orders","Products","Mine"], mine:"Mine", back:"Back",
+ searchPh:"Search order number", noResult:"No matching records",
+ aRules:"Level rules", aHowScored:"How is Credit Score calculated?", aWhyChanged:"Why did my score change?",
+ aWhatIs:"What is Seller Level?", aBenefitRule:"Benefit rules", aTip:"About Credit Score and levels",
+ total:"%n records", perPage:"10 / page", goTo:"Go to", pageU:"",
+ benefitNote:"Benefits are determined by your level at the time the buyer places the order. Orders already placed are not affected by later level changes.",
+ bTraffic:"Traffic support", bTrafficS:"Active at every level", bTrafficD:"The higher your level, the more exposure your listings get in search and recommendations. No level threshold.",
+ bWarranty:"Extended warranty label", bWarrantyOn:"Unlocked · Lv.20", bWarrantyOff:"Unlocks at Lv.20",
+ bWarrantyD:"Offer a paid 90-day / 180-day extended warranty label on your listings to lift conversion.",
+ bSoon:"More benefits", bSoonS:"Coming soon", bSoonD:"Commission incentives and withdrawal fee discounts are in planning.",
+ accOnly:"ACC category only",
+ pcTabs:["Account","Security","Authentication","Associate with social media"],
+ pcH:"Account", pcSub:"Change your basic account settings",
+ fStore:"Store Name",fUid:"User ID",fEmail:"Email",fLevel:"Seller Level",fLang:"Language",fTime:"Online time",fContact:"Online contact information",fMaint:"Store Maintenance",
+ update:"Update", view:"View",
+ mMenu:["Level Center","Personal Center","Financial Center","Message Center"], mLogout:"Log out",
+ orderCol:"Order No.",
+ tiers:{starter:"Starter",growing:"Growing",premium:"Premium",top:"Top",elite:"Elite"},
+ sellerName:"beauty-fu"
+}};
+
+/* stage copy (中文，供内部评审) */
+const STAGE = {
+ home:["Seller Center 首页","沿用现有右侧资料卡，把原本的 level 0 / Credit Rating 两个字段替换为完整的等级模块。左侧数据区完全不动。"],
+ profile:["Personal Center","在 Account 表单里新增一行 Seller Level，位置紧跟 User ID。这里只呈现结论，不放进度条——卖家来这里是核对资料，不是看成长。"],
+ center:["Level Center（独立页）","唯一权威口径。当前权益很少，所以把无门槛的流量扶持排在第一位，撑住「等级有用」的叙事；付费质保标注 ACC 品类范围；预留位说明后续权益。"],
+ menu:["顶栏与账号菜单","徽章紧贴店铺名，是全站唯一常驻露出。展开菜单补一行进度，直达等级中心。"],
+ spec:["类型与标题对照表","两组枚举：订单状态 3 种（后端用，不展示给卖家），计分项 6 种（展示为行内小标签）。前端只存 code，文案按当前语言渲染。本期不含人工调整。"],
+ article:["Help Center 规则文章","公开分值、门槛、权益归属；不公开重算时点、统计窗口、降级判定时机。中英双语，跟随 Personal Center 的语言设置。"]
+};
+
+/* ================= data ================= */
+const OPFX = "SO2087851550363795";
+const pad2 = v => String(v).padStart(2,"0");
+function fmtTs(ts){
+  const x=new Date(ts);
+  return x.getUTCFullYear()+"-"+pad2(x.getUTCMonth()+1)+"-"+pad2(x.getUTCDate())+
+    " "+pad2(x.getUTCHours())+":"+pad2(x.getUTCMinutes());
+}
+function seeded(seed){let s=seed;return()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff}}
+function buildLedger(){
+  const r=seeded(20260813), out=[], DAY=86400000;
+  const t0=Date.UTC(2026,7,13,4,0);
+  for(let i=0;i<16;i++){
+    const o=OPFX+(457-i*7), ts=t0-Math.round(i*1.35*DAY);
+    let tags=[{k:"receive",v:"+1"}], total=1;
+    if(r()>0.2){ tags.push({k:"ontime",v:"+1"}); total+=1; }
+    const rv=r();
+    if(rv>0.42){ tags.push({k:"good",v:"+1"}); total+=1; }
+    else if(rv<0.14){ tags.push({k:"bad",v:"−1"}); total-=1; }
+    let status="scored";
+    const f=r();
+    if(f<0.14){ status="refunded"; tags=[{k:"refund",v:"0"}]; total=0; }
+    else if(f<0.26){ status="aftersales"; tags=[{k:"aftersale",v:"0"}]; total=0; }
+    out.push({o,status,tags,total,ts});
+  }
+  return out.sort((a,b)=>b.ts-a.ts);
+}
+const DATA = {
+ premium:{
+  tier:"premium", lv:"Lv.57", next:"Lv.58", score:"8,240", need:"132", frac:[68,200], pct:34, est:[66,"2.0"],
+  warrantyOn:true, idOk:true, ledger:buildLedger()
+ },
+ fresh:{
+  tier:"starter", lv:"Lv.1", next:"Lv.2", score:"0", need:"5", frac:[0,5], pct:0, est:[5,"1.0"],
+  warrantyOn:false, idOk:false, ledger:[]
+ }
+};
+const TIER_ORDER = ["starter","growing","premium","top","elite"];
+
+/* ================= icons ================= */
+const I = {
+ grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+ list:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+ box:'<path d="M20 7 12 3 4 7v10l8 4 8-4z"/><path d="m4 7 8 4 8-4M12 11v10"/>',
+ chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/>',
+ dollar:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.5 9.5a2.5 2.5 0 0 0-5 .6c0 2.5 5 1.3 5 3.8a2.5 2.5 0 0 1-5 .6"/>',
+ mail:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="m2 7 10 6 10-6"/>',
+ star:'<path d="m12 3 2.6 5.6 6.4.8-4.7 4.3 1.3 6.3L12 17l-5.6 3 1.3-6.3L3 9.4l6.4-.8z"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/>',
+ cube:'<path d="M20 7 12 3 4 7v10l8 4 8-4z"/>',
+ code:'<path d="m8 8-4 4 4 4M16 8l4 4-4 4"/>',
+ help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3 2.4V14"/><path d="M12 17.2h.01"/>',
+ shield:'<path d="M12 3 4 6v6c0 5 3.4 8.2 8 9 4.6-.8 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+ trend:'<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+ plus:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+ lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+ link:'<path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/>',
+ out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
+ chev:'<path d="m9 6 6 6-6 6"/>', bell:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'
+};
+const ic=(k,c)=>'<svg class="'+(c||"gi")+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+I[k]+'</svg>';
+
+let lang="en", persona="premium", filter="all", query="", page=1, view="desktop", h5n=5;
+const t = () => T[lang];
+const d = () => DATA[persona];
+const badge = () => {
+  const x=d(); return '<span class="lvbadge t-'+x.tier+'">'+t().tiers[x.tier]+' <span class="lv">'+x.lv+'</span></span>';
+};
+
+/* ---------- shared chrome ---------- */
+function topbar(open){
+  const x=d();
+  return '<div class="igv-top"><div class="logo"><span class="logo-mk">iG</span><span class="logo-tx">iGVault<small>GAMER VALUE</small></span></div>'+
+  '<div class="top-r"><div class="acct'+(open?' anno':'')+'"'+(open?' data-note="徽章紧贴店铺名，读作「beauty-fu，优质 Lv.57」。段位名在前、数字在后 —— Lv.57 单独出现没有语义"':'')+
+  ' style="'+(open?'background:var(--sunk);border-color:var(--line)':'')+'"><div class="av">b</div><span style="font-size:13px">'+t().sellerName+'</span>'+badge()+
+  (open?'<svg style="width:12px;height:12px;color:var(--ink3)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>':'')+'</div>'+
+  '<span class="bell">'+ic("bell","")+'<b>69</b></span>'+(open?menu():'')+'</div></div>';
+}
+function menu(){
+  const x=d(), n=t();
+  return '<div class="menu anno" data-note="菜单里补一行进度，是全站唯一不用跳转就能看到「还差多少分」的地方">'+
+  '<div class="menu-hd"><div class="menu-nm">'+n.sellerName+badge()+'</div><div class="menu-id">User ID 113223992</div>'+
+  '<div class="menu-lv"><div class="menu-lv-t"><span>'+n.needTo.replace("%s",x.next)+'</span><b>'+x.need+' '+n.pts+'</b></div>'+
+  '<div class="bar"><i style="width:'+x.pct+'%"></i></div></div></div>'+
+  n.mMenu.map((m,i)=>'<div class="menu-i"'+(i===0?' data-jump="center"':'')+'>'+ic(["star","user","dollar","mail"][i])+m+'</div>').join("")+
+  '<div class="menu-sep"></div><div class="menu-i anno" data-note="账号菜单里放规则入口，覆盖「随时想查一下」的场景" data-jump="article">'+ic("help")+n.aRules+'</div>'+
+  '<div class="menu-sep"></div><div class="menu-i">'+ic("out")+n.mLogout+'</div></div>';
+}
+function sidebar(act){
+  const n=t().nav, keys=["grid","list","box","chat","dollar","mail","star","user","cube","code","help"];
+  return '<aside class="igv-side"><div class="side-card">'+n.map((label,i)=>{
+    const isLv = i===6;
+    return '<div class="si'+(act===i?' act':'')+(isLv?' anno':'')+'"'+(isLv?' data-note="等级中心作为一级入口，与 Account 平级。既然它要驱动升级，路径不能藏在二级页" data-jump="center"':'')+'>'+
+    ic(keys[i])+label+(([1,2,4,5,7,8].includes(i))?'<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>':'')+'</div>';
+  }).join("")+'</div></aside>';
+}
+const crumb = arr => '<div class="crumb">'+arr.map((c,i)=>i===0?'<b>'+c+'</b>':c).join(' / ')+'</div>';
+
+/* ---------- level module (右侧资料卡内) ---------- */
+function levelBlock(){
+  const x=d(), n=t();
+  return '<div class="lvblock anno" data-note="替换原有的 level 0 / Credit Rating。原来两个孤立数字没有上下文，改成 徽章 + 累计分 + 还差多少 + 进度条，卖家一眼知道自己在哪、下一步做什么">'+
+  '<div class="lvhead"><span style="font-size:12.5px;color:var(--ink2)">'+n.sellerLevel+
+  '<a class="qm" href="#" data-jump="article" title="'+n.aTip+'" aria-label="'+n.aTip+'">?</a></span>'+badge()+'</div>'+
+  '<div class="lvscore">'+n.creditScore+' <b>'+x.score+'</b></div>'+
+  '<div class="lvneed">'+n.needTo.replace("%s",x.next)+' <b>'+x.need+'</b> '+n.pts+'</div>'+
+  '<div class="bar"><i style="width:'+x.pct+'%"></i></div>'+
+  '<div class="barfoot"><span class="num">'+x.frac[0]+' / '+x.frac[1]+'</span><a class="lnk" href="#" data-jump="center">'+n.levelCenter+' ›</a></div></div>';
+}
+
+/* ---------- benefits ---------- */
+function benefits(){
+  const x=d(), n=t();
+  const cells=[
+    '<div class="bcell anno" data-note="流量扶持排第一且无门槛：权益还没上齐时，它是唯一能让所有等级卖家都感到「等级有用」的东西">'+ic("trend","bi")+
+      '<div class="bn">'+n.bTraffic+'</div><div class="bs on">'+n.bTrafficS+'</div><div class="bd">'+n.bTrafficD+'</div></div>',
+    '<div class="bcell'+(x.warrantyOn?'':' lock')+'">'+ic(x.warrantyOn?"shield":"lock","bi")+
+      '<div class="bn">'+n.bWarranty+'<span class="scope">'+n.accOnly+'</span></div>'+
+      '<div class="bs '+(x.warrantyOn?'on':'off')+'">'+(x.warrantyOn?n.bWarrantyOn:n.bWarrantyOff)+'</div>'+
+      '<div class="bd">'+n.bWarrantyD+'</div></div>',
+    '<div class="bcell soon">'+ic("plus","bi")+'<div class="bn">'+n.bSoon+'</div><div class="bs off">'+n.bSoonS+'</div><div class="bd">'+n.bSoonD+'</div></div>'
+  ];
+  return '<div class="wcard anno" data-note="权益只有两项半，所以用三列铺满而不是留白。虚线卡明确告知「还会有」，避免卖家以为等级没用"><div class="wtitle">'+n.benefits+'</div><div class="hr"></div>'+
+   '<div class="bgrid">'+cells.join("")+'</div><p class="foot-note">'+n.benefitNote+
+   ' <a class="lnk" href="#" data-jump="article">'+n.aBenefitRule+' ›</a></p></div>';
+}
+
+/* ---------- ledger ---------- */
+const PER = 10;
+function matched(){
+  const x=d(); const q=query.trim();
+  return x.ledger.filter(r=>!q||r.o.includes(q));
+}
+function ledgerRows(){
+  const n=t(), all=matched();
+  if(!all.length) return '<div class="empty">'+(query?n.noResult:n.emptyLedger)+'</div>';
+  const start = view==="h5" ? 0 : (page-1)*PER;
+  const end   = view==="h5" ? h5n : start+PER;
+  return all.slice(start,end).map(r=>{
+    const tv = r.total>0?"+"+r.total:(r.total<0?"−"+Math.abs(r.total):"0");
+    const cls = r.total>0?"plus":(r.total<0?"minus":"zero");
+    return '<div class="led"><div class="led-m">'+
+      '<div class="led-a"><span class="ono">'+r.o+'</span></div>'+
+      '<div class="stags">'+r.tags.map(g=>'<span class="stag">'+n.items[g.k]+
+        '<b class="'+(g.v.startsWith("+")?"plus":(g.v==="0"?"zero":"minus"))+'">'+g.v+'</b></span>').join("")+'</div>'+
+      '<div class="led-b mini">'+n.updatedAt+' <span class="num" style="font-size:11.5px">'+fmtTs(r.ts)+'</span></div>'+
+      '</div><div class="led-v '+cls+'">'+tv+'</div></div>';
+  }).join("");
+}
+function pager(){
+  const n=t(), total=matched().length, pages=Math.max(1,Math.ceil(total/PER));
+  if(!total) return "";
+  let nums=[];
+  if(pages<=7){ for(let i=1;i<=pages;i++) nums.push(i); }
+  else{
+    nums=[1,2,3,4,5,"…",pages];
+    if(page>4) nums = page>pages-4 ? [1,"…",pages-4,pages-3,pages-2,pages-1,pages]
+                                   : [1,"…",page-1,page,page+1,"…",pages];
+  }
+  return '<div class="pager">'+
+   '<span class="pg-total num">'+n.total.replace("%n",total)+'</span>'+
+   '<span class="pg-sel">'+n.perPage+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span>'+
+   '<button class="pg-b" data-go="'+(page-1)+'"'+(page===1?' disabled':'')+'>‹</button>'+
+   nums.map(v=>v==="…"?'<span class="pg-el">···</span>':
+     '<button class="pg-b num'+(v===page?' on':'')+'" data-go="'+v+'">'+v+'</button>').join("")+
+   '<button class="pg-b" data-go="'+(page+1)+'"'+(page===pages?' disabled':'')+'>›</button>'+
+   '<span class="pg-goto">'+n.goTo+'<input class="pg-in num" id="goInput" value="'+page+'">'+n.pageU+'</span>'+
+   '</div>';
+}
+function ledger(){
+  const n=t();
+  return '<div class="wcard anno" data-note="一笔订单只有一条记录，展示当前计分结果。标题是订单号，下方小标签拆解分数由哪几项构成 —— 与每日刷新的技术实现一致，不是流水账">'+
+   '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">'+
+   '<div class="wtitle">'+n.ledger+' <span class="rfnote">'+n.refreshNote+'</span> <a class="lnk anno" data-note="明细页的锚点措辞用问句「分数为什么会变？」，比「查看规则」更贴近卖家此刻的疑问" href="#" data-jump="article" style="font-weight:400;margin-left:6px">'+n.aWhyChanged+'</a></div>'+
+   '<div class="srch anno" data-note="按订单号搜索。售后纠纷的申诉几乎都以订单号为线索，这是明细页最高频的操作">'+
+     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'+
+     '<input id="srchIn" placeholder="'+n.searchPh+'" value="'+query.replace(/"/g,"&quot;")+'">'+
+     (query?'<button id="srchX" aria-label="clear">✕</button>':'')+'</div></div>'+
+   '<div class="hr"></div><div id="ledrows">'+ledgerRows()+'</div>'+
+   '<div id="ledpager">'+pager()+'</div></div>';
+}
+
+/* ================= scenes ================= */
+function renderHome(){
+  const x=d(), n=t();
+  document.getElementById("v-home").innerHTML =
+  '<div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="urlbar">seller.igv.com/dashboard</span></div>'+
+  topbar(false)+'<div class="igv-body">'+sidebar(0)+'<div class="igv-main">'+crumb(n.crumbHome)+
+  '<div class="cols2"><div>'+
+    '<div class="wcard"><div class="wtitle">'+n.pending+'</div><div class="hr"></div><div class="statrow">'+
+    [[0,n.p1],[0,n.p2],[1,n.p3],[0,n.p4],[0,n.p5]].map(s=>'<div class="stat"><div class="v'+(s[0]?' hot':'')+'">'+s[0]+'</div><div class="k">'+s[1]+'</div></div>').join("")+
+    '</div></div>'+
+    '<div class="wcard"><div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><div class="wtitle">'+n.sales+'</div>'+
+      '<span style="font-size:12px;color:var(--ink3)">'+n.updated+'：<span class="num">2026-08-13 18:01:43</span></span></div><div class="hr"></div>'+
+      '<div class="tabs">'+n.tabs.map((s,i)=>'<button class="tab'+(i===0?' act':'')+'">'+s+'</button>').join("")+'</div>'+
+      '<div class="grid3">'+[[n.s1,"0"],[n.s2,"0"],[n.s3,"0"]].map(s=>'<div><div class="k">'+s[0]+'</div><div class="v">'+s[1]+'</div></div>').join("")+'</div>'+
+      '<div style="height:22px"></div><div class="grid3" style="grid-template-columns:repeat(2,1fr);max-width:66%">'+
+      [[n.s4,"0"],[n.s5,"0%"]].map(s=>'<div><div class="k">'+s[0]+'</div><div class="v">'+s[1]+'</div></div>').join("")+'</div></div>'+
+  '</div><div>'+
+    '<div class="pcard"><div class="bigav">b</div><div class="nm">'+n.sellerName+'</div>'+
+    '<div class="tagrow"><span class="tag'+(x.idOk?' ok':'')+'">'+(x.idOk?n.idOk:n.idNo)+'</span>'+
+    '<span class="tag'+(x.idOk?' ok':'')+'">'+(x.idOk?n.depOk:n.depNo)+'</span></div>'+levelBlock()+'</div>'+
+    '<div class="wcard"><div class="wtitle">'+n.notif+'</div><div class="hr" style="margin:12px 0 4px"></div>'+
+    [["Seller Dashboard Domain Update Notice","2026-06-02"],["iGV Inactive Products Management Rule","2026-01-28"],
+     ["iGV Refund/Dispute Process Update","2025-10-14"],["Seller Policies and Rules","2025-12-11"]]
+    .map(r=>'<div class="notif"><span>'+r[0]+'</span><span class="d">'+r[1]+'</span></div>').join("")+'</div>'+
+  '</div></div></div></div>';
+}
+
+function renderProfile(){
+  const x=d(), n=t();
+  const row=(k,v,btn)=>'<div class="frow"><div class="frow-k">'+k+'</div><div class="frow-v">'+v+'</div>'+(btn?'<button class="btn-o">'+btn+'</button>':'')+'</div>';
+  document.getElementById("v-profile").innerHTML =
+  '<div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="urlbar">seller.igv.com/account/personal</span></div>'+
+  topbar(false)+'<div class="igv-body">'+sidebar(7)+'<div class="igv-main">'+crumb(n.crumbPc)+
+  '<div class="pc-wrap"><div class="pc-nav">'+n.pcTabs.map((s,i)=>'<div class="pc-i'+(i===0?' act':'')+'">'+ic(["user","shield","shield","link"][i])+s+'</div>').join("")+'</div>'+
+  '<div class="pc-main"><div class="pc-h">'+n.pcH+'</div><div class="pc-sub">'+n.pcSub+'</div>'+
+  row(n.fStore,'<span style="display:inline-flex;align-items:center;gap:9px"><span class="av">b</span>'+n.sellerName+'</span>',n.update)+
+  row(n.fUid,'<span class="num">113223992</span>')+
+  '<div class="frow anno" data-note="紧跟 User ID，与 KYC 同属身份档案。只给结论和入口，不放进度条 —— 这里是核对资料的地方，不是看成长的地方"><div class="frow-k">'+n.fLevel+
+    '</div><div class="frow-v"><span style="display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap">'+badge()+
+    '<span style="color:var(--ink3);font-size:12.5px">'+n.creditScore+' <span class="num">'+x.score+'</span> · '+
+    n.needTo.replace("%s",x.next)+' <span class="num">'+x.need+'</span> '+n.pts+'</span></span></div>'+
+    '<a class="lnk" href="#" data-jump="center" style="flex:none">'+n.levelCenter+' ›</a></div>'+
+  row(n.fEmail,'529924683@qq.com')+
+  '<div class="frow anno" data-note="语言开关就在这里。等级模块的所有文案、包括规则文章，都跟随这一项"><div class="frow-k">'+n.fLang+
+    '</div><div class="frow-v">'+(lang==="zh"?"中文":"English")+'</div><button class="btn-o" id="langBtn">'+n.update+'</button></div>'+
+  row(n.fTime,'<span class="num">02:00-00:00</span> (UTC+08:00) Beijing',n.update)+
+  row(n.fContact,'qq: <span class="num">529924683</span>',n.update)+
+  row(n.fMaint,'Store Introduction<br><span style="color:var(--ink3)">--</span>',n.update)+
+  '</div></div></div></div>';
+}
+
+function renderCenter(){
+  const x=d(), n=t();
+  document.getElementById("v-center").innerHTML =
+  '<div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="urlbar">seller.igv.com/level</span></div>'+
+  topbar(false)+'<div class="igv-body">'+sidebar(6)+'<div class="igv-main">'+crumb(n.crumbLc)+
+  '<div class="wcard anno" data-note="主数字是「还需 132 分」，预计单数降级为小字。分数是承诺，单数是估算 —— 量级不同的东西不该同样大">'+
+   '<div class="lc-hero"><div class="crest t-'+x.tier+'"><span class="t">'+n.tiers[x.tier]+'</span><span class="n">'+x.lv+'</span></div>'+
+   '<div style="flex:1;min-width:0"><div class="lc-nm">'+n.tiers[x.tier]+' · '+x.lv+'</div>'+
+   '<div class="lc-sc">'+n.creditScore+' <span class="num" style="color:var(--ink);font-weight:600">'+x.score+'</span></div></div>'+
+   '<a class="lnk anno" data-note="等级中心右上角的规则入口，是全站最主要的一个锚点" href="#" data-jump="article" style="flex:none">'+n.aRules+' ›</a></div>'+
+   '<div class="goal"><span class="goal-l">'+n.needTo.replace("%s",x.next)+'</span><span class="goal-v">'+x.need+'</span><span class="goal-u">'+n.pts+'</span></div>'+
+   '<div class="bar"><i style="width:'+x.pct+'%"></i></div>'+
+   '<div class="barfoot"><span class="num">'+x.frac[0]+' / '+x.frac[1]+' '+n.pts+'</span>'+
+   '<span>'+n.estimate.replace("%n",x.est[0]).replace("%r",x.est[1])+'</span></div></div>'+
+  benefits()+ledger()+
+  '</div></div>';
+  bindLedger();
+}
+
+function renderMenu(){
+  const n=t();
+  document.getElementById("v-menu").innerHTML =
+  '<div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="urlbar">seller.igv.com/order/list</span></div>'+
+  topbar(true)+'<div class="igv-body" style="min-height:430px">'+sidebar(1)+'<div class="igv-main">'+crumb([n.crumbHome[0],n.nav[1]])+
+  '<div class="wcard anno" data-note="订单列表直接带本单信用分，是分数溯源的第一现场。卖家对账不用逐单点开详情页">'+
+  '<div class="wtitle">'+n.nav[1]+' <a class="lnk anno" data-note="订单列表/详情页出现信用分的地方就要有锚点 —— 卖家的疑问总是从某一笔订单开始的" href="#" data-jump="article" style="font-weight:400;margin-left:6px">'+n.aHowScored+'</a></div><div class="hr"></div>'+
+  [[OPFX+"457","+3","$34.90"],[OPFX+"450","+3","$18.50"],[OPFX+"443","+1","$11.20"]].map(r=>
+   '<div class="led"><div class="led-m"><div class="led-a">'+n.items.receive+'</div>'+
+   '<div class="led-b"><span class="ono">'+n.orderCol+' '+r[0]+'</span> · <span style="font-size:11.5px">'+n.creditScore+' '+r[1]+'</span></div></div>'+
+   '<div class="led-v">'+r[2]+'</div></div>').join("")+
+  '</div></div></div>';
+}
+
+/* ---------- article ---------- */
+const ART = {
+zh:`<div class="art-eyebrow">Help Center · 卖家规则</div>
+<h1 class="art-h1">卖家等级是什么，怎么升</h1>
+<p class="art-lead">卖家等级记录你在平台上长期经营的质量。每完成一笔让买家满意的订单，你都会累积信用分；信用分达到一定数量，等级就会提升。等级越高，可以使用的经营权益越多。</p>
+<p class="art-meta">最近更新：2026-08-13</p>
+
+<h2 class="art-h2"><span class="no">01</span>信用分怎么来</h2>
+<p>信用分按订单计算，一笔订单最多可获得 3 分。等级中心的信用分明细<b>每天刷新一次</b>，每笔订单只保留一条记录，显示这笔订单当前的得分，以及分数由哪几项构成。</p>
+<table class="at"><thead><tr><th style="width:24%">计分项</th><th style="width:14%">信用分</th><th>说明</th></tr></thead><tbody>
+<tr><td>确认收货</td><td class="n" style="color:var(--good);font-weight:600">+1</td><td>买家确认收货即计入，不必等质保期结束</td></tr>
+<tr><td>准时递送</td><td class="n" style="color:var(--good);font-weight:600">+1</td><td>由你自行履约的订单适用；平台自动递送的订单没有这一项</td></tr>
+<tr><td>买家好评</td><td class="n" style="color:var(--good);font-weight:600">+1</td><td>仅统计买家主动给出的评价，系统自动评价不计入</td></tr>
+<tr><td>买家差评</td><td class="n" style="color:var(--danger);font-weight:600">&#8722;1</td><td>同上</td></tr>
+<tr><td>售后/纠纷发起</td><td class="n" style="color:var(--ink3);font-weight:600">0</td><td>退款、售后、纠纷任一发起，该订单分数清零，其余计分项不再显示</td></tr>
+<tr><td>退款</td><td class="n" style="color:var(--ink3);font-weight:600">0</td><td>订单最终退款，分数保持为 0，不再恢复</td></tr>
+</tbody></table>
+<div class="callout"><p>举例：一笔顺利完成并获得好评的订单显示 <b>+3</b>，下方三个标签分别是确认收货 +1、准时递送 +1、买家好评 +1。若买家随后发起售后，这笔订单变为 <b>0</b>，标签只剩「售后/纠纷发起」。若争议被取消，订单回到 <b>+3</b>，三个标签重新出现。</p></div>
+
+<h2 class="art-h2"><span class="no">02</span>等级怎么算</h2>
+<p>等级从 Lv.1 开始，没有上限。每升一级所需的信用分随等级提高而增加：</p>
+<table class="at"><thead><tr><th style="width:26%">等级</th><th style="width:24%">升每级所需</th><th>阶段</th></tr></thead><tbody>
+<tr><td class="n">Lv.1 – Lv.20</td><td class="n">5 – 50 分</td><td>新手 Starter</td></tr>
+<tr><td class="n">Lv.21 – Lv.50</td><td class="n">100 分</td><td>成长 Growing</td></tr>
+<tr><td class="n">Lv.51 – Lv.100</td><td class="n">200 分</td><td>优质 Premium</td></tr>
+<tr><td class="n">Lv.101 – Lv.200</td><td class="n">1,000 分</td><td>头部 Top</td></tr>
+<tr><td class="n">Lv.201 及以上</td><td class="n">3,000 分</td><td>荣誉 Elite</td></tr>
+</tbody></table>
+<p>Level Center 会显示你距离下一级还差多少分，并根据你近期的平均每单得分，估算大约还需要多少笔订单。这个单数是估算值，会随你的实际经营情况变化。</p>
+
+<h2 class="art-h2"><span class="no">03</span>等级能带来什么</h2>
+<p>等级达到门槛后，权益自动开通，无需申请。</p>
+<table class="at"><thead><tr><th style="width:32%">权益</th><th style="width:20%">门槛</th><th>内容</th></tr></thead><tbody>
+<tr><td>流量扶持</td><td>无门槛</td><td>等级越高，商品在搜索与推荐中获得的曝光机会越多</td></tr>
+<tr><td>付费延长质保标签</td><td class="n">Lv.20 · 仅 ACC 品类</td><td>可为 ACC 品类商品开通 90 天 / 180 天延长质保标签，提升买家信任与转化</td></tr>
+</tbody></table>
+<p>更多权益（佣金费率激励、提现手续费优惠等）正在规划中，上线后会在 Level Center 直接展示，并通过站内信通知。</p>
+
+<h2 class="art-h2"><span class="no">04</span>关于降级</h2>
+<p>信用分会因退款、售后、纠纷和差评被扣回。当累计信用分低于当前等级所需时，等级会相应下调。</p>
+<div class="callout"><p><b>已经生效的权益不受影响。</b>权益按买家下单时你的等级判定。例如买家在你处于 Lv.57 时购买了带延长质保标签的商品，即使之后你的等级降到 Lv.20 以下，这笔订单的质保服务依然有效；但在等级恢复前，新商品将无法再使用该标签。</p></div>
+<p>等级发生变化时，我们会通过站内信通知你，你可以在信用分明细中按订单号核对具体变动。</p>
+
+<h2 class="art-h2"><span class="no">05</span>常见问题</h2>
+<div class="faq"><div class="faq-q">刚入驻，多久能升到 Lv.2？</div><div class="faq-a">Lv.1 升 Lv.2 只需 5 分，通常几笔顺利完成的订单就可以。新手阶段升级所需分数很低，Level Center 会显示预计还需多少单。</div></div>
+<div class="faq"><div class="faq-q">为什么我的分数变少了？</div><div class="faq-a">通常是某笔订单发生了退款、售后或纠纷，该订单此前获得的分数被扣回。在信用分明细中搜索该订单号，就能看到它的标签已变成「售后/纠纷发起」，订单分为 0。若争议之后取消，分数会自动恢复。</div></div>
+<div class="faq"><div class="faq-q">为什么这笔订单只加了 1 分？</div><div class="faq-a">准时递送分只适用于你自行履约的订单，好评分只统计买家主动给出的评价。由平台自动递送、或买家未主动评价的订单，通常只有确认收货的 1 分。</div></div>
+<div class="faq"><div class="faq-q">预计单数为什么会变？</div><div class="faq-a">它根据你近期的平均每单得分估算。当你的准时率、好评率提升时，平均每单得分变高，需要的订单数就会减少。</div></div>
+<div class="faq"><div class="faq-q">等级会按品类分开计算吗？</div><div class="faq-a">不会。你的所有订单共同计入同一个等级。付费延长质保标签目前只适用于 ACC 品类，但等级本身不分品类。</div></div>`,
+en:`<div class="art-eyebrow">Help Center · Seller rules</div>
+<h1 class="art-h1">What Seller Level is, and how to move up</h1>
+<p class="art-lead">Your Seller Level reflects the long-term quality of how you sell on iGV. Every order you complete to a buyer's satisfaction earns Credit Score; once your score reaches a threshold, your level goes up. Higher levels come with more selling benefits.</p>
+<p class="art-meta">Last updated: 2026-08-13</p>
+
+<h2 class="art-h2"><span class="no">01</span>How Credit Score is earned</h2>
+<p>Credit Score is calculated per order, up to 3 points each. The Credit Score list in the Level Center <b>refreshes once a day</b>. Each order keeps a single record showing what it currently scores and which items make up that score.</p>
+<table class="at"><thead><tr><th style="width:26%">Score item</th><th style="width:14%">Score</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Order received</td><td class="n" style="color:var(--good);font-weight:600">+1</td><td>Counted once the buyer confirms receipt &#8212; no need to wait for the warranty period to end</td></tr>
+<tr><td>On-time delivery</td><td class="n" style="color:var(--good);font-weight:600">+1</td><td>Applies to orders you fulfil yourself; auto-delivered orders never carry this item</td></tr>
+<tr><td>Positive review</td><td class="n" style="color:var(--good);font-weight:600">+1</td><td>Only reviews the buyer writes themselves count; system-generated ones don't</td></tr>
+<tr><td>Negative review</td><td class="n" style="color:var(--danger);font-weight:600">&#8722;1</td><td>Same as above</td></tr>
+<tr><td>After-sales / dispute opened</td><td class="n" style="color:var(--ink3);font-weight:600">0</td><td>A refund, after-sales case or dispute clears the order's score; other items stop showing</td></tr>
+<tr><td>Refunded</td><td class="n" style="color:var(--ink3);font-weight:600">0</td><td>The order was refunded; the score stays at 0 and is not reinstated</td></tr>
+</tbody></table>
+<div class="callout"><p>For example: an order that completes smoothly and earns a positive review shows <b>+3</b>, with three items beneath it &#8212; order received +1, on-time delivery +1, positive review +1. If the buyer then opens an after-sales case, the order drops to <b>0</b> and only &quot;After-sales / dispute opened&quot; remains. If the dispute is cancelled, the order returns to <b>+3</b> and the three items reappear.</p></div>
+
+<h2 class="art-h2"><span class="no">02</span>How levels are calculated</h2>
+<p>Levels start at Lv.1 with no cap. The score needed per level increases as you move up:</p>
+<table class="at"><thead><tr><th style="width:26%">Level</th><th style="width:26%">Score per level</th><th>Stage</th></tr></thead><tbody>
+<tr><td class="n">Lv.1 – Lv.20</td><td class="n">5 – 50 pts</td><td>Starter</td></tr>
+<tr><td class="n">Lv.21 – Lv.50</td><td class="n">100 pts</td><td>Growing</td></tr>
+<tr><td class="n">Lv.51 – Lv.100</td><td class="n">200 pts</td><td>Premium</td></tr>
+<tr><td class="n">Lv.101 – Lv.200</td><td class="n">1,000 pts</td><td>Top</td></tr>
+<tr><td class="n">Lv.201 and above</td><td class="n">3,000 pts</td><td>Elite</td></tr>
+</tbody></table>
+<p>The Level Center shows how many points you still need, plus an estimate of how many more orders that works out to, based on your recent average score per order. That order estimate will shift as your performance changes.</p>
+
+<h2 class="art-h2"><span class="no">03</span>What your level gets you</h2>
+<p>Benefits activate automatically once you reach the threshold — no application needed.</p>
+<table class="at"><thead><tr><th style="width:32%">Benefit</th><th style="width:22%">Threshold</th><th>What it does</th></tr></thead><tbody>
+<tr><td>Traffic support</td><td>No threshold</td><td>The higher your level, the more exposure your listings get in search and recommendations</td></tr>
+<tr><td>Extended warranty label</td><td class="n">Lv.20 · ACC only</td><td>Offer a paid 90-day / 180-day extended warranty label on ACC listings to build buyer trust and lift conversion</td></tr>
+</tbody></table>
+<p>More benefits — commission incentives, withdrawal fee discounts — are in planning. They'll appear in the Level Center when they launch, and we'll notify you by message.</p>
+
+<h2 class="art-h2"><span class="no">04</span>About level drops</h2>
+<p>Credit Score is reclaimed when refunds, after-sales cases, disputes or negative reviews occur. If your total score falls below what your current level requires, your level drops accordingly.</p>
+<div class="callout"><p><b>Benefits already in effect are not affected.</b> Benefits are determined by your level at the moment the buyer places the order. If a buyer bought a listing with an extended warranty label while you were Lv.57, that warranty stays valid even if you later drop below Lv.20 — but you won't be able to apply the label to new listings until your level recovers.</p></div>
+<p>We'll message you whenever your level changes, and you can reconcile the exact movements by order number in your Credit Score history.</p>
+
+<h2 class="art-h2"><span class="no">05</span>FAQ</h2>
+<div class="faq"><div class="faq-q">I just joined — how long until Lv.2?</div><div class="faq-a">Lv.1 to Lv.2 takes only 5 points, usually a handful of smoothly completed orders. Thresholds are low at the Starter stage, and the Level Center shows roughly how many more orders you need.</div></div>
+<div class="faq"><div class="faq-q">Why did my score go down?</div><div class="faq-a">Usually because an order went to refund, after-sales or dispute, and the score it had earned was reclaimed. Search that order number in your Credit Score list and its item will read &quot;After-sales / dispute opened&quot;, with the order scoring 0. If the dispute is later cancelled, the score is restored automatically.</div></div>
+<div class="faq"><div class="faq-q">Why did this order only earn 1 point?</div><div class="faq-a">The on-time delivery point applies only to orders you fulfil yourself, and the review point counts only reviews the buyer writes themselves. Auto-delivered orders, or orders with no buyer review, typically earn just the 1 point for confirmed receipt.</div></div>
+<div class="faq"><div class="faq-q">Why does the order estimate change?</div><div class="faq-a">It's based on your recent average score per order. As your on-time rate and positive review rate improve, your average rises and fewer orders are needed.</div></div>
+<div class="faq"><div class="faq-q">Is level calculated per category?</div><div class="faq-a">No. All your orders count toward one level. The extended warranty label currently applies to the ACC category only, but the level itself is not split by category.</div></div>`
+};
+
+
+/* ================= H5 ================= */
+function phone(inner){
+  return '<div class="phwrap"><div class="phone">'+
+   '<div class="ph-status"><span class="num">9:41</span>'+
+   '<span class="ph-ico"><i></i><i></i><i class="bat"></i></span></div>'+inner+'</div></div>';
+}
+function phNav(title,back,right){
+  return '<div class="ph-nav">'+(back?'<span class="ph-back" data-jump="'+back+'">‹</span>':'<span class="ph-back ph-blank"></span>')+
+   '<span class="ph-ttl">'+title+'</span>'+(right||'<span class="ph-back ph-blank"></span>')+'</div>';
+}
+function phTab(act){
+  const n=t(), icons=["grid","list","box","user"];
+  return '<div class="ph-tab">'+n.h5Tabs.map((m,i)=>'<div class="ph-tb'+(i===act?' on':'')+'"'+
+    (i===3?' data-jump="menu"':'')+'>'+ic(icons[i],"tbi")+'<span>'+m+'</span></div>').join("")+'</div>';
+}
+function h5LevelStrip(){
+  const x=d(), n=t();
+  return '<div class="ph-lv anno" data-note="H5 首页把等级压成一条：徽章 + 还差多少 + 进度条。手机上没有右栏，等级只能横向铺，信息量必须再减一层" data-jump="center">'+
+   '<div class="ph-lv-r"><span style="font-size:12.5px;color:var(--ink2)">'+n.sellerLevel+'</span>'+badge()+
+   '<span class="ph-arw">›</span></div>'+
+   '<div class="ph-lv-n">'+n.needTo.replace("%s",x.next)+' <b class="num">'+x.need+'</b> '+n.pts+
+   ' <span class="dim" style="font-size:11.5px">· '+n.creditScore+' <span class="num">'+x.score+'</span></span></div>'+
+   '<div class="bar"><i style="width:'+x.pct+'%"></i></div></div>';
+}
+function renderH5Home(){
+  const x=d(), n=t();
+  document.getElementById("v-home").innerHTML = phone(
+   '<div class="ph-top"><span class="logo"><span class="logo-mk">iG</span><span class="logo-tx" style="font-size:14px">iGVault</span></span>'+
+   '<span class="bell">'+ic("bell","")+'<b>69</b></span></div>'+
+   '<div class="ph-body">'+
+    '<div class="ph-hero"><div class="av" style="width:44px;height:44px;border-radius:12px;font-size:17px">b</div>'+
+     '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">'+n.sellerName+'</div>'+
+     '<div class="tagrow" style="justify-content:flex-start;margin-top:5px">'+
+     '<span class="tag'+(x.idOk?' ok':'')+'">'+(x.idOk?n.idOk:n.idNo)+'</span>'+
+     '<span class="tag'+(x.idOk?' ok':'')+'">'+(x.idOk?n.depOk:n.depNo)+'</span></div></div></div>'+
+    h5LevelStrip()+
+    '<div class="ph-card"><div class="ph-h">'+n.pending+'</div><div class="ph-grid">'+
+     [[0,n.p1],[0,n.p2],[1,n.p3],[0,n.p4],[0,n.p5]].map(g=>'<div><div class="v'+(g[0]?' hot':'')+'">'+g[0]+'</div><div class="k">'+g[1]+'</div></div>').join("")+
+     '</div></div>'+
+    '<div class="ph-card"><div class="ph-h">'+n.sales+'</div>'+
+     '<div class="tabs" style="margin:10px 0 14px">'+n.tabs.map((m,i)=>'<button class="tab'+(i===0?' act':'')+'" style="padding:5px 11px;font-size:12px">'+m+'</button>').join("")+'</div>'+
+     '<div class="ph-grid">'+[[n.s1,"0"],[n.s2,"0"],[n.s3,"0"],[n.s4,"0"],[n.s5,"0%"]].map(g=>'<div><div class="v">'+g[1]+'</div><div class="k">'+g[0]+'</div></div>').join("")+'</div></div>'+
+   '</div>'+phTab(0));
+}
+function renderH5Profile(){
+  const x=d(), n=t();
+  const row=(k,v,arw)=>'<div class="ph-row"><span class="ph-k">'+k+'</span><span class="ph-v">'+v+'</span>'+(arw?'<span class="ph-arw">›</span>':'')+'</div>';
+  document.getElementById("v-profile").innerHTML = phone(
+   phNav(n.pcH,"home")+
+   '<div class="ph-body">'+
+    '<div class="ph-card ph-flush">'+
+     row(n.fStore,'<span style="display:inline-flex;align-items:center;gap:8px">'+n.sellerName+'<span class="av" style="width:24px;height:24px;font-size:11px">b</span></span>',1)+
+     row(n.fUid,'<span class="num">113223992</span>')+
+     '<div class="ph-row anno" data-note="H5 上等级行右侧只放徽章 + 箭头，累计分和进度都不放 —— 手机行宽有限，硬塞会挤成两行，可读性反而下降" data-jump="center">'+
+      '<span class="ph-k">'+n.fLevel+'</span><span class="ph-v">'+badge()+'</span><span class="ph-arw">›</span></div>'+
+     row(n.fEmail,'529924683@qq.com')+
+     row(n.fLang,(lang==="zh"?"中文":"English"),1)+
+     row(n.fContact,'qq: <span class="num">529924683</span>',1)+
+    '</div></div>');
+}
+function renderH5Center(){
+  const x=d(), n=t();
+  const cells=[
+   ['<div class="ph-b" data-note="">'+ic("trend","bi")+'<div style="flex:1;min-width:0"><div class="bn">'+n.bTraffic+'</div>'+
+    '<div class="bs on">'+n.bTrafficS+'</div><div class="bd">'+n.bTrafficD+'</div></div></div>'],
+   ['<div class="ph-b'+(x.warrantyOn?'':' lock')+'">'+ic(x.warrantyOn?"shield":"lock","bi")+'<div style="flex:1;min-width:0">'+
+    '<div class="bn">'+n.bWarranty+'<span class="scope">'+n.accOnly+'</span></div>'+
+    '<div class="bs '+(x.warrantyOn?'on':'off')+'">'+(x.warrantyOn?n.bWarrantyOn:n.bWarrantyOff)+'</div>'+
+    '<div class="bd">'+n.bWarrantyD+'</div></div></div>'],
+   ['<div class="ph-b soon">'+ic("plus","bi")+'<div style="flex:1;min-width:0"><div class="bn">'+n.bSoon+'</div>'+
+    '<div class="bs off">'+n.bSoonS+'</div></div></div>']
+  ].map(c=>c[0]).join("");
+  document.getElementById("v-center").innerHTML = phone(
+   phNav(n.levelCenter,"home",'<span class="ph-rule" data-jump="article">'+n.aRules+'</span>')+
+   '<div class="ph-body">'+
+    '<div class="ph-hero2 anno" data-note="H5 的等级卡是整屏首屏，可以放大主数字。徽记 + 还需分数 + 进度条 + 预计单数，全部一屏内可见，不需要滚动">'+
+     '<div class="lc-hero"><div class="crest t-'+x.tier+'"><span class="t">'+n.tiers[x.tier]+'</span><span class="n">'+x.lv+'</span></div>'+
+     '<div style="flex:1;min-width:0"><div class="lc-nm">'+n.tiers[x.tier]+'</div>'+
+     '<div class="lc-sc">'+n.creditScore+' <span class="num" style="color:var(--ink);font-weight:600">'+x.score+'</span></div></div></div>'+
+     '<div class="goal"><span class="goal-l">'+n.needTo.replace("%s",x.next)+'</span><span class="goal-v">'+x.need+'</span><span class="goal-u">'+n.pts+'</span></div>'+
+     '<div class="bar"><i style="width:'+x.pct+'%"></i></div>'+
+     '<div class="barfoot"><span class="num">'+x.frac[0]+' / '+x.frac[1]+' '+n.pts+'</span>'+
+     '<span>'+n.estimate.replace("%n",x.est[0]).replace("%r",x.est[1])+'</span></div></div>'+
+    '<div class="ph-card"><div class="ph-h">'+n.benefits+'</div>'+cells+
+     '<p class="foot-note">'+n.benefitNote+' <a class="lnk" data-jump="article">'+n.aBenefitRule+' ›</a></p></div>'+
+    '<div class="ph-card"><div class="ph-h">'+n.ledger+
+      '<a class="lnk" data-jump="article" style="float:right;font-weight:400">'+n.aWhyChanged+'</a></div>'+
+     '<div class="rfnote" style="margin:0 0 10px;display:block">'+n.refreshNote+'</div>'+
+     '<div class="srch" style="min-width:0;margin-bottom:10px">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'+
+      '<input id="srchIn" placeholder="'+n.searchPh+'" value="'+query.replace(/"/g,"&quot;")+'"></div>'+
+     '<div id="ledrows">'+ledgerRows()+'</div>'+
+     '<button class="moreb anno" id="moreH5" data-note="H5 不用分页器，改成加载更多。手机上没有「跳到第 37 页」的需求，卖家只会往下翻">'+n.loadMore+'</button>'+
+    '</div></div>');
+  bindLedger();
+}
+function renderH5Mine(){
+  const x=d(), n=t();
+  const item=(icn,label,jump)=>'<div class="ph-row"'+(jump?' data-jump="'+jump+'"':'')+'>'+
+    '<span class="ph-k" style="display:inline-flex;align-items:center;gap:10px">'+ic(icn)+label+'</span><span class="ph-arw">›</span></div>';
+  document.getElementById("v-menu").innerHTML = phone(
+   '<div class="ph-mine anno" data-note="Web 端的账号下拉菜单，在 H5 上变成「我的」独立页 —— 手机没有悬浮菜单的位置，等级在这里获得了比 Web 更大的展示面">'+
+    '<div style="display:flex;align-items:center;gap:12px">'+
+     '<div class="av" style="width:48px;height:48px;border-radius:14px;font-size:19px">b</div>'+
+     '<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:600;color:#fff">'+n.sellerName+'</div>'+
+     '<div style="margin-top:5px">'+badge()+'</div></div></div>'+
+    '<div class="ph-mine-lv" data-jump="center">'+
+     '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12.5px">'+
+      '<span>'+n.needTo.replace("%s",x.next)+' <b class="num">'+x.need+'</b> '+n.pts+'</span>'+
+      '<span class="num dim">'+x.frac[0]+' / '+x.frac[1]+'</span></div>'+
+     '<div class="bar" style="margin-top:8px"><i style="width:'+x.pct+'%"></i></div></div></div>'+
+   '<div class="ph-body">'+
+    '<div class="ph-card ph-flush">'+
+     item("star",n.levelCenter,"center")+item("user",n.pcH,"profile")+
+     item("dollar",n.mMenu[2])+item("mail",n.mMenu[3])+'</div>'+
+    '<div class="ph-card ph-flush">'+item("help",n.aRules,"article")+'</div>'+
+   '</div>'+phTab(3));
+}
+function renderH5Article(){
+  const n=t();
+  document.getElementById("v-article").innerHTML = phone(
+   phNav(n.aRules,"center")+'<div class="ph-body"><article class="artwrap ph-art">'+ART[lang]+'</article></div>');
+}
+
+/* ---------- spec sheet ---------- */
+const SPEC_STATUS=[
+ {c:"scored",z:"正常计分",e:"Scored",cls:"scored",v:"实际得分",
+  tz:"订单正常完成，分数由下方计分项累加",te:"Order completed normally; score is the sum of its items"},
+ {c:"after_sales_open",z:"售后/纠纷中",e:"After-sales open",cls:"aftersales",v:"0",
+  tz:"退款、售后或纠纷已发起，该订单分数清零。同一订单只清零一次，升级为纠纷不重复处理",
+  te:"A refund, after-sales case or dispute is open; the order's score is cleared. Cleared once only — escalation does not clear again"},
+ {c:"refunded",z:"已退款",e:"Refunded",cls:"refunded",v:"0",
+  tz:"订单最终退款，分数不再恢复",te:"The order was refunded; the score is not reinstated"},
+];
+const SPEC_ITEM=[
+ {c:"order_received",z:"确认收货",e:"Order received",v:"+1",vc:"plus",
+  tz:"买家确认收货，无需等待质保期结束",te:"Buyer confirms receipt; no need to wait for the warranty period"},
+ {c:"on_time_delivery",z:"准时递送",e:"On-time delivery",v:"+1",vc:"plus",
+  tz:"卖家自行履约且未超时；平台自动递送订单无此项",te:"Seller-fulfilled and not overdue; auto-delivered orders never carry this item"},
+ {c:"review_positive",z:"买家好评",e:"Positive review",v:"+1",vc:"plus",
+  tz:"买家主动好评，系统自动评价不计入",te:"Buyer-written positive review; system-generated reviews excluded"},
+ {c:"review_negative",z:"买家差评",e:"Negative review",v:"−1",vc:"minus",
+  tz:"买家主动差评，系统自动评价不计入",te:"Buyer-written negative review; system-generated reviews excluded"},
+ {c:"after_sales_opened",z:"售后/纠纷发起",e:"After-sales / dispute opened",v:"0",vc:"zero",
+  tz:"出现该项时，订单其余计分项全部不展示，订单分为 0",
+  te:"When present, all other items are hidden and the order scores 0"},
+ {c:"refunded",z:"退款",e:"Refunded",v:"0",vc:"zero",
+  tz:"同上，且为终态，不会再恢复",te:"Same as above, and final — it will not be reinstated"}
+];
+function specTable(head,rows,tag){
+  return '<table class="sp"><thead><tr><th style="width:22%">'+head+'</th><th style="width:9%">分值</th><th>说明</th></tr></thead><tbody>'+
+   rows.map(r=>'<tr><td>'+(tag?'<span class="ltag lt-'+r.cls+'">'+r.z+'</span>':'<b>'+r.z+'</b>')+
+    '<div class="sp-en">'+r.e+'</div><code class="sp-c">'+r.c+'</code></td>'+
+    '<td class="sp-v '+(r.vc||"")+'">'+r.v+'</td>'+
+    '<td class="sp-d">'+r.tz+'<div class="sp-en">'+r.te+'</div></td></tr>').join("")+'</tbody></table>';
+}
+function renderSpec(){
+  document.getElementById("v-spec").innerHTML='<div class="specwrap">'+
+   '<h3 class="sph">A · 订单状态 order_status<span>后端字段，决定分数是否清零，不展示给卖家</span></h3>'+
+   specTable("状态 status",SPEC_STATUS,true)+
+   '<h3 class="sph">B · 计分项 score_item<span>订单分数的构成，展示为行内小标签</span></h3>'+
+   specTable("计分项 item",SPEC_ITEM,false)+
+   '<div class="spnote"><b>落地约束</b>'+
+   '<p>1 · 明细不是流水表。每日刷新时按订单当前状态重算，一笔订单永远只有一条记录，覆盖写入而非追加。</p>'+
+   '<p>2 · 只存 code：<code>order_no</code> + <code>status</code> + <code>items[]</code> + <code>total</code> + <code>updated_at</code>。文案按当前语言渲染，卖家切换语言后历史记录随之切换。</p>'+
+   '<p>3 · 标题里不出现数字。<code>+n</code> 的 n 由后端计算后放在独立字段，一旦拼进文案就没法做多语言。</p>'+
+   '<p>4 · <code>after_sales_opened</code> 与 <code>refunded</code> 是互斥的展示态：出现任一项时，其余计分项全部隐藏，订单分显示 0。争议取消后恢复原有计分项与分数。</p>'+
+   '<p>5 · 订单状态只做后端逻辑，不在明细中以标签形式展示给卖家。卖家看到的是订单号、当前分数和计分项标签三层信息，状态由标签本身表达。</p>'+
+   '<p>6 · 人工调整（平台补偿 / 违规扣分 / 数据修正）本期不做。后续引入时是新增计分项，不改变本表结构。</p></div></div>';
+}
+function renderArticle(){
+  document.getElementById("v-article").innerHTML =
+  '<div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="urlbar">seller.igv.com/help/seller-level</span></div>'+
+  '<article class="artwrap">'+ART[lang]+'</article>';
+}
+
+/* ================= wiring ================= */
+function refreshLedger(){
+  const rows=document.getElementById("ledrows"); if(rows) rows.innerHTML=ledgerRows();
+  const pg=document.getElementById("ledpager");
+  if(pg){ pg.innerHTML=pager(); bindPager(); }
+  const mb=document.getElementById("moreH5");
+  if(mb){ const left=matched().length-h5n; mb.style.display = left>0?"block":"none";
+          mb.textContent=t().loadMore+(left>0?" ("+left+")":""); }
+}
+function bindPager(){
+  const box=document.getElementById("ledpager"); if(!box) return;
+  const pages=Math.max(1,Math.ceil(matched().length/PER));
+  box.querySelectorAll(".pg-b").forEach(b=>b.addEventListener("click",()=>{
+    const g=parseInt(b.dataset.go,10);
+    if(isNaN(g)||g<1||g>pages||g===page) return;
+    page=g; refreshLedger();
+  }));
+  const gi=document.getElementById("goInput");
+  if(gi) gi.addEventListener("keydown",e=>{
+    if(e.key!=="Enter") return;
+    const g=parseInt(gi.value,10);
+    if(isNaN(g)||g<1||g>pages){ gi.value=page; return; }
+    page=g; refreshLedger();
+  });
+}
+function bindLedger(){
+  const si=document.getElementById("srchIn");
+  if(si) si.addEventListener("input",()=>{ query=si.value; page=1; h5n=5; refreshLedger(); });
+  const mh=document.getElementById("moreH5");
+  if(mh) mh.addEventListener("click",()=>{ h5n+=5; refreshLedger(); });
+  const sx=document.getElementById("srchX");
+  if(sx) sx.addEventListener("click",()=>{query="";page=1;renderCenter();pins();});
+  bindPager();
+}
+function pins(){
+  ["home","profile","center","menu"].forEach(id=>{
+    const sc=document.getElementById("sc-"+id), list=document.getElementById("notes-"+id);
+    if(!list) return; list.innerHTML="";
+    sc.querySelectorAll(".anno[data-note]").forEach((el,i)=>{
+      const p=document.createElement("span"); p.className="pin"; p.textContent=i+1; el.appendChild(p);
+      const li=document.createElement("li"); li.textContent=el.dataset.note; list.appendChild(li);
+    });
+  });
+}
+function renderAll(){
+  if(view==="h5"){ renderH5Home(); renderH5Profile(); renderH5Center(); renderH5Mine(); renderH5Article(); }
+  else { renderHome(); renderProfile(); renderCenter(); renderMenu(); renderArticle(); }
+  renderSpec(); pins();
+  document.body.classList.toggle("ish5", view==="h5");
+  const lb=document.getElementById("langBtn");
+  if(lb) lb.addEventListener("click",()=>setLang(lang==="zh"?"en":"zh"));
+  Object.keys(STAGE).forEach(k=>{
+    document.getElementById("t-"+k).textContent=STAGE[k][0];
+    document.getElementById("d-"+k).textContent=STAGE[k][1];
+  });
+}
+function setLang(l){
+  lang=l; document.documentElement.lang = l==="zh"?"zh-CN":"en";
+  document.querySelectorAll("#lang button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.l===l)));
+  renderAll();
+}
+document.querySelectorAll("#lang button").forEach(b=>b.addEventListener("click",()=>setLang(b.dataset.l)));
+document.querySelectorAll("#view button").forEach(b=>b.addEventListener("click",()=>{
+  view=b.dataset.v; h5n=5; page=1;
+  document.querySelectorAll("#view button").forEach(y=>y.setAttribute("aria-selected",String(y.dataset.v===view)));
+  renderAll();
+}));
+document.querySelectorAll("#persona button").forEach(b=>b.addEventListener("click",()=>{
+  persona=b.dataset.p; filter="all"; query=""; page=1; h5n=5;
+  document.querySelectorAll("#persona button").forEach(y=>y.setAttribute("aria-selected",String(y.dataset.p===persona)));
+  renderAll();
+}));
+function goScene(name){
+  const sc=document.getElementById("sc-"+name); if(!sc) return;
+  document.querySelectorAll(".rail-btn").forEach(y=>y.setAttribute("aria-selected",String(y.dataset.scene===name)));
+  document.querySelectorAll(".scene").forEach(s=>s.classList.remove("on"));
+  sc.classList.add("on");
+  window.scrollTo(0,0);
+  sc.classList.remove("landed"); void sc.offsetWidth; sc.classList.add("landed");
+}
+document.querySelectorAll(".rail-btn").forEach(b=>b.addEventListener("click",()=>goScene(b.dataset.scene)));
+document.addEventListener("click",e=>{
+  const el=e.target.closest?e.target.closest("[data-jump]"):null;
+  if(!el) return;
+  e.preventDefault();
+  goScene(el.dataset.jump);
+});
+const noteSw=document.getElementById("noteSw");
+noteSw.addEventListener("click",()=>{
+  const on=noteSw.getAttribute("aria-checked")==="true";
+  noteSw.setAttribute("aria-checked",String(!on));
+  document.body.classList.toggle("noteon",!on);
+  document.body.classList.toggle("noteoff",on);
+});
+renderAll();
+</script>
+</body>
+</html>
